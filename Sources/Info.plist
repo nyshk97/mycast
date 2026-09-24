@@ -40,6 +40,6 @@
 	<key>SUFeedURL</key>
 	<string>$(MYCAST_SU_FEED_URL)</string>
 	<key>SUPublicEDKey</key>
-	<string>__SPARKLE_PUBLIC_KEY_NOT_SET__</string>
+	<string>uUqmqa0PD/9FQW+pWpgJEdhqQ6EMLL/xFltYbZ5B4V8=</string>
 </dict>
 </plist>
