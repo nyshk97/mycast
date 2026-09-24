@@ -6,6 +6,7 @@ struct RootItem: Identifiable {
         case app(URL)
         case settingsPane(String)
         case command(LauncherMode)
+        case system(SystemAction)
     }
 
     let id: String
@@ -42,8 +43,15 @@ final class AppIndex {
                  kind: .command(.emoji), keys: ["Search Emoji & Symbols", "Emoji", "絵文字", "emoji"],
                  alias: "e", iconPath: nil, symbolName: "face.smiling"),
     ]
+    /// all の末尾に置く。同点のときは並び順で決まるので、打ち始め（`sl` 等）で
+    /// 確認なしの Sleep がアプリより先に来て Enter 一発で走らないようにする
+    let systemCommands: [RootItem] = SystemAction.allCases.map { a in
+        RootItem(id: "sys:\(a.rawValue)", title: a.title, subtitle: a.subtitle, typeLabel: "System",
+                 kind: .system(a), keys: a.keys,
+                 alias: nil, iconPath: nil, symbolName: a.symbolName)
+    }
 
-    var all: [RootItem] { commands + apps + panes }
+    var all: [RootItem] { commands + apps + panes + systemCommands }
 
     init(db: Database) {
         self.db = db

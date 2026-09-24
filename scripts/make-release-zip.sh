@@ -34,7 +34,7 @@ for nested in \
     codesign --force --options runtime --timestamp \
         --preserve-metadata=entitlements --sign "$IDENTITY" "$nested"
 done
-codesign --force --options runtime --timestamp --sign "$IDENTITY" "$APP"
+codesign --force --options runtime --timestamp --entitlements mycast.entitlements --sign "$IDENTITY" "$APP"
 
 # 検証: adhoc が残っていないこと・secure timestamp があること・get-task-allow がないこと
 fail=0
@@ -56,6 +56,9 @@ done
 ent=$(codesign -d --entitlements - "$APP" 2>&1)
 if [[ "$ent" == *"get-task-allow"* ]]; then
     echo "NG: get-task-allow が残存"; fail=1
+fi
+if [[ "$ent" != *"com.apple.security.automation.apple-events"* ]]; then
+    echo "NG: apple-events のエンタイトルメントがない（再起動・シャットダウンが送れない）"; fail=1
 fi
 codesign --verify --deep --strict "$APP" || fail=1
 [ "$fail" -eq 0 ] || exit 1

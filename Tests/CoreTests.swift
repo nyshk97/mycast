@@ -193,3 +193,39 @@ final class CalculatorTests: XCTestCase {
         XCTAssertEqual(Calculator.format(Calculator.evaluate("2 ^ 60")!, grouping: false), "1.15292150460685e+18")
     }
 }
+
+final class SystemCommandTests: XCTestCase {
+    func testOnlyIrreversibleActionsNeedConfirmation() {
+        XCTAssertFalse(SystemAction.sleep.needsConfirmation)
+        XCTAssertFalse(SystemAction.lockScreen.needsConfirmation)
+        XCTAssertTrue(SystemAction.restart.needsConfirmation)
+        XCTAssertTrue(SystemAction.shutDown.needsConfirmation)
+        XCTAssertTrue(SystemAction.quitAllApps.needsConfirmation)
+        XCTAssertEqual(SystemAction.allCases.filter(\.returnsToPreviousApp), [.sleep, .lockScreen])
+    }
+
+    func testQuitAllKeepsFinderSelfAndBackgroundApps() {
+        XCTAssertTrue(QuitAllPolicy.shouldQuit(bundleID: "com.apple.Safari", isRegular: true, isSelf: false))
+        XCTAssertTrue(QuitAllPolicy.shouldQuit(bundleID: nil, isRegular: true, isSelf: false))
+        XCTAssertFalse(QuitAllPolicy.shouldQuit(bundleID: "com.apple.finder", isRegular: true, isSelf: false))
+        XCTAssertFalse(QuitAllPolicy.shouldQuit(bundleID: "io.github.nyshk97.mycast", isRegular: true, isSelf: true))
+        // メニューバー常駐（accessory）・バックグラウンドは閉じない
+        XCTAssertFalse(QuitAllPolicy.shouldQuit(bundleID: "com.example.agent", isRegular: false, isSelf: false))
+    }
+
+    func testSearchFindsSystemActions() {
+        let items = SystemAction.allCases.map { a in
+            RankInput(id: a.rawValue, keys: a.keys, alias: nil, usage: nil)
+        }
+        let now = Date()
+        XCTAssertEqual(Ranker.rank(query: "restart", items: items, now: now).first, "restart")
+        XCTAssertEqual(Ranker.rank(query: "reboot", items: items, now: now).first, "restart")
+        XCTAssertEqual(Ranker.rank(query: "shut", items: items, now: now).first, "shutDown")
+        XCTAssertEqual(Ranker.rank(query: "sleep", items: items, now: now).first, "sleep")
+        XCTAssertEqual(Ranker.rank(query: "lock", items: items, now: now).first, "lockScreen")
+        XCTAssertEqual(Ranker.rank(query: "close all", items: items, now: now).first, "quitAllApps")
+        XCTAssertEqual(Ranker.rank(query: "quit all", items: items, now: now).first, "quitAllApps")
+        XCTAssertEqual(Ranker.rank(query: "saikidou", items: items, now: now).first, "restart")
+        XCTAssertEqual(Ranker.rank(query: "shatto", items: items, now: now).first, "shutDown")
+    }
+}

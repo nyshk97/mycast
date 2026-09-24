@@ -35,6 +35,8 @@ targets:
         # （scripts の TEAM_ID はそちら）。取り違えではないので揃えない（personal-mac-apps.md の署名の節）
         DEVELOPMENT_TEAM: U4WAHGGBR7
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        # scripts/make-release-zip.sh の再署名でも同じファイルを渡す
+        CODE_SIGN_ENTITLEMENTS: mycast.entitlements
       configs:
         # dev と常用は Bundle ID を分離する（TCC 権限・データ・Sparkle が独立し、併存しても衝突しない）
         Debug:
@@ -64,6 +66,7 @@ targets:
         LSUIElement: true
         NSPrincipalClass: NSApplication
         NSHumanReadableCopyright: ""
+        NSAppleEventsUsageDescription: 再起動・シャットダウン・スリープとアプリの終了をシステムに依頼するために使います。
         # Sparkle。アップデータの起動は #if !DEBUG でガードし、feed URL も Release 構成にだけ
         # 入れる二重防御（Debug では MYCAST_SU_FEED_URL が未定義で空文字になる）
         SUFeedURL: $(MYCAST_SU_FEED_URL)

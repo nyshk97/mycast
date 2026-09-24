@@ -11,13 +11,15 @@ mise run run       # /Applications/mycast Dev.app に置いて起動し直す（
 ログは `~/Library/Logs/mycast/mycast-dev.log`（常用版は `mycast.log`）。先頭の語がイベント名:
 `launch` / `db.migrated to vN` / `index.apps_updated` / `hotkey.registered` / `hotkey.register_failed` /
 `panel.shown` / `panel.closed reason=…` / `panel.focus_failed` / `clipboard.recorded` / `clipboard.purged` / `paste.posted` /
-`paste.fallback_copy reason=…` / `launch.app` / `launch.pane` / `calc.copied`。
+`paste.fallback_copy reason=…` / `launch.app` / `launch.pane` / `calc.copied` /
+`system.armed` / `system.sent` / `system.failed` / `system.quit_all` / `system.dry_run` / `system.permission_unchecked`。
 
 ## 検証フック（dev 版のみ・フォーカスを奪わない）
 
 常駐中の dev に、バイナリを直接起動して引数を渡す（2 個目のプロセスは引数を既存インスタンスへ転送して終了する）。
 `--show` はパネルを出すだけで、アクティブ化も入力ソースの切り替えもしない＝作業中のユーザーの邪魔をしない。
-Enter（実行・貼り付け）のフックは作っていない（他のアプリに貼り付けてしまうため）。
+`--key enter` はシステム操作の行だけを受け付け、実行は dry run（`system.dry_run` をログに出すだけ）。
+貼り付け・アプリ起動の Enter は撃てない（他のアプリに作用してしまうため。`hook.enter_refused` になる）。
 
 ```bash
 B="/Applications/mycast Dev.app/Contents/MacOS/mycast Dev"
@@ -25,11 +27,14 @@ B="/Applications/mycast Dev.app/Contents/MacOS/mycast Dev"
 "$B" --show clipboard --key down --snapshot /tmp/c.png --hide
 "$B" --show emoji --query いいね --dump --hide
 "$B" --show root --query "3 + (34 *2)" --dump --snapshot /tmp/calc.png --hide   # items の先頭が "= 71 [Calculator]"
+# 確認待ち → 検索語を変えると解除 → 2 回で dry run。ログが armed, armed, dry_run の順になる
+"$B" --show root --query restart --key enter --query restar --key enter --key enter
+"$B" --show root --query shut --key enter --snapshot /tmp/armed.png --hide   # 行が「Press ↵ again to Shut Down」
 tail ~/Library/Logs/mycast/mycast-dev.log   # hook.dump に mode / query / selection / count / 先頭 10 件
 ```
 
 - `--snapshot` はプロセス内描画なので画面収録の許可が要らない。背景のぼかしは写らない（撮影中だけ不透明にする）ので、**レイアウト確認用**
-- `--key` は `down|up|left|right|escape`
+- `--key` は `down|up|left|right|escape|enter`
 
 ## 移行（スキーマ変更）の検証
 
@@ -64,6 +69,9 @@ fixture に入れて起動し直すと `clipboard.purged rows=1 files=1` にな�
 - `3 + (34 *2)` → Enter で `71` がコピーされ、元のアプリに戻る（貼り付けはしない）
 - `e` → Enter、または ⌃⌘Space（dev は ⌃⌥⌘Space）→ 絵文字を Enter で貼り付け
 - アクセシビリティ許可が無いとき・パスワード入力中は、コピーだけになりトーストが出る
+- システム操作の本物の実行（dry run では撃たない）: Lock Screen・Sleep はそのまま、Restart・Shut Down は作業を保存してから。
+  常用版（Hardened Runtime）で `system.failed` が出ないこと（出たら entitlement か Apple Event の許可）
+- Close All Apps: Finder と mycast が残り、未保存の書類があるアプリは保存確認で止まる
 - 常用版: 再ログイン後もログイン項目として常駐し、⌃L が効く
 
 ## dev と常用の併存

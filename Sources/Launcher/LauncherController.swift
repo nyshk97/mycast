@@ -34,6 +34,8 @@ final class LauncherController {
         case paste
         /// 他のアプリがクリックされた等で key を失った
         case lostFocus
+        /// スリープ・画面ロック（復帰後は元のアプリで作業を続けるので戻す）
+        case suspended
     }
 
     let model: LauncherModel
@@ -47,6 +49,8 @@ final class LauncherController {
     private var openedDirectly = false
     private var closing = false
     private var keyMonitor: Any?
+    /// 検証フックの Enter で本物の再起動等を撃たないためのフラグ（dev のフックだけが立てる）
+    private var systemDryRun = false
 
     var isShown: Bool { panel.isVisible }
 
@@ -150,7 +154,7 @@ final class LauncherController {
             savedInputSource = nil
         }
         switch reason {
-        case .escape, .toggle, .copied:
+        case .escape, .toggle, .copied, .suspended:
             restorePreviousApp()
         case .launched, .paste, .lostFocus:
             break
@@ -266,7 +270,17 @@ final class LauncherController {
                 return
             }
             guard let item = model.selectedRootItem else { return }
-            model.usage.record(item.id)
+            if case .system(let action) = item.kind {
+                // ⌘Enter は他の画面では「コピーして戻る」なので、システム操作の確定には使わない
+                if copyOnly { return }
+                if action.needsConfirmation, model.armedAction != action {
+                    model.armedAction = action
+                    Log.write("system.armed \(action.rawValue)")
+                    return
+                }
+            }
+            // 検証フックの dry run では履歴を書かない（以後の並びが検証のせいで変わる）
+            if !systemDryRun { model.usage.record(item.id) }
             switch item.kind {
             case .app(let url):
                 close(.launched)
@@ -282,6 +296,15 @@ final class LauncherController {
                     NSWorkspace.shared.open(url)
                 }
                 Log.write("launch.pane \(id)")
+            case .system(let action):
+                model.armedAction = nil
+                // dry run では元のアプリを前面化しない（検証フックはフォーカスに触らない）
+                close(action.returnsToPreviousApp && !systemDryRun ? .suspended : .launched)
+                if systemDryRun {
+                    Log.write("system.dry_run \(action.rawValue)")
+                } else {
+                    SystemActions.perform(action)
+                }
             case .command(let mode):
                 openedDirectly = false
                 model.reset(to: mode)
@@ -357,6 +380,15 @@ final class LauncherController {
         case "left": model.move(-1)
         case "right": model.move(1)
         case "escape": handleEscape()
+        case "enter":
+            // システム操作だけ受け付け、実行は dry run にする（貼り付け・起動は他のアプリに作用するので撃たない）
+            guard isShown, case .system = model.selectedRootItem?.kind else {
+                Log.write("hook.enter_refused not_system")
+                return
+            }
+            systemDryRun = true
+            execute(copyOnly: false)
+            systemDryRun = false
         default: Log.write("hook.unknown_key \(name)")
         }
     }

@@ -37,7 +37,11 @@ final class LauncherModel: ObservableObject {
 
     @Published private(set) var mode: LauncherMode = .root
     @Published private(set) var query = ""
-    @Published var selection = 0
+    @Published var selection = 0 {
+        didSet { if selection != oldValue { armedAction = nil } }
+    }
+    /// Enter を 1 回押して確認待ちになったシステム操作。選択・検索語が変わったら解除する
+    @Published var armedAction: SystemAction?
     @Published private(set) var rootResults: [RootItem] = []
     /// 検索語が式のときだけ入る。あれば選択位置 0 が計算カードで、rootResults は 1 つずれる
     @Published private(set) var calc: CalcResult?
@@ -106,6 +110,7 @@ final class LauncherModel: ObservableObject {
 
     func refresh() {
         selection = 0
+        armedAction = nil
         generation += 1
         switch mode {
         case .root:
