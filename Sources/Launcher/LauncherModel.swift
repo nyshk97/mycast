@@ -7,16 +7,16 @@ enum LauncherMode: String {
     var title: String {
         switch self {
         case .root: return ""
-        case .clipboard: return "Clipboard History"
+        case .clipboard: return "Clipboard"
         case .emoji: return "Emoji"
         }
     }
 
     var placeholder: String {
         switch self {
-        case .root: return "アプリ・設定を検索…"
-        case .clipboard: return "履歴を検索…"
-        case .emoji: return "絵文字を検索…"
+        case .root: return "Search apps & settings"
+        case .clipboard: return "Search clipboard"
+        case .emoji: return "Search emoji"
         }
     }
 }
@@ -34,6 +34,9 @@ final class LauncherModel: ObservableObject {
     @Published private(set) var emojis: [EmojiEntry] = []
     /// スナップショット撮影中だけ背景を不透明にする（ぼかしはプロセス内描画に写らないため）
     @Published var snapshotMode = false
+    /// 候補を作り直すたびに増える。リストはこれを id にして作り直し、スクロール位置を先頭に戻す
+    /// （検索語が変わっても前のスクロール位置と行の描画が残るのを防ぐ）
+    @Published private(set) var generation = 0
 
     /// 開いた直後の検索語が空のルートだけ検索欄のみ（Compact）。それ以外は候補リストまで伸ばす
     var expanded: Bool { mode != .root || !query.trimmingCharacters(in: .whitespaces).isEmpty }
@@ -81,6 +84,7 @@ final class LauncherModel: ObservableObject {
 
     func refresh() {
         selection = 0
+        generation += 1
         switch mode {
         case .root:
             let items = index.all

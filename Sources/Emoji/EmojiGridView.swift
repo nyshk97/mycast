@@ -8,7 +8,7 @@ struct EmojiGridView: View {
 
     var body: some View {
         if model.emojis.isEmpty {
-            EmptyStateView(text: "一致する絵文字がありません")
+            EmptyStateView(text: "No matching emoji")
         } else {
             ScrollViewReader { proxy in
                 ScrollView {
@@ -18,16 +18,20 @@ struct EmojiGridView: View {
                                 .font(.system(size: 34))
                                 .frame(maxWidth: .infinity)
                                 .frame(height: 60)
-                                .background(RoundedRectangle(cornerRadius: 8)
-                                    .fill(i == model.selection ? Color.white.opacity(0.16) : Color.white.opacity(0.03)))
+                                .background(RoundedRectangle(cornerRadius: 10)
+                                    .fill(i == model.selection ? Theme.rose.opacity(0.22) : Color.white.opacity(0.03)))
+                                .overlay(RoundedRectangle(cornerRadius: 10)
+                                    .strokeBorder(i == model.selection ? Theme.rose.opacity(0.5) : Color.clear, lineWidth: 1))
                                 .id(i)
                                 .contentShape(Rectangle())
                                 .onTapGesture { model.selection = i; onActivate(i) }
                                 .help(entry.j ?? entry.n)
                         }
                     }
-                    .padding(10)
+                    .padding(12)
                 }
+                .scrollIndicators(.never)
+                .id(model.generation)
                 .onChange(of: model.selection) { _, s in proxy.scrollTo(s) }
             }
         }
