@@ -48,3 +48,5 @@ mycast の更新履歴。形式は [Keep a Changelog](https://keepachangelog.com
 - アプリ・システム設定のパネルを検索して開くランチャー（⌃L）
 - クリップボード履歴（`c`）。テキスト・画像・ファイルを 3 か月保存し、Enter で貼り付け・⌘Enter でコピー
 - 絵文字の検索と貼り付け（`e` または ⌃⌘Space）。英語・日本語のキーワードで引ける
+- ルート検索に打った式の計算。Enter で答えをコピー
+- ルート検索からのシステム操作（Sleep・Lock Screen・Restart・Shut Down・Close All Apps）。Restart・Shut Down・Close All Apps は Enter 2 回で実行

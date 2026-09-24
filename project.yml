@@ -72,7 +72,7 @@ targets:
         SUFeedURL: $(MYCAST_SU_FEED_URL)
         SUEnableAutomaticChecks: true
         # keychain の Sparkle 鍵（account "mycast"）と対。generate_keys --account mycast の出力を書く
-        SUPublicEDKey: __SPARKLE_PUBLIC_KEY_NOT_SET__
+        SUPublicEDKey: uUqmqa0PD/9FQW+pWpgJEdhqQ6EMLL/xFltYbZ5B4V8=
   mycastTests:
     type: bundle.unit-test
     platform: macOS
