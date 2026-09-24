@@ -53,7 +53,7 @@ final class LauncherController {
     private var systemDryRun = false
 
     var isShown: Bool { panel.isVisible }
-    /// Check for Updates の実行先（Sparkle は AppDelegate が持つ）
+    /// Update mycast の実行先（Sparkle は AppDelegate が持つ）
     var onCheckForUpdates: (() -> Void)?
 
     init(model: LauncherModel, paster: Paster) {

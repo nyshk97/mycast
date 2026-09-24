@@ -47,8 +47,8 @@ final class AppIndex {
     /// 常用版で Sparkle が動いているときだけ AppDelegate が入れる（dev 版・鍵の無いビルドでは出さない）
     var updateCommand: RootItem?
     static let checkForUpdatesItem = RootItem(
-        id: "cmd:check-for-updates", title: "Check for Updates", subtitle: "アップデートを確認", typeLabel: "Command",
-        kind: .checkForUpdates, keys: ["Check for Updates", "Update", "アップデートを確認", "appudeto"],
+        id: "cmd:check-for-updates", title: "Update mycast", subtitle: "mycast を最新版にする", typeLabel: "Command",
+        kind: .checkForUpdates, keys: ["Update mycast", "Check for Updates", "mycast", "アップデートを確認", "appudeto"],
         alias: nil, iconPath: nil, symbolName: "arrow.down.circle")
     /// all の末尾に置く。同点のときは並び順で決まるので、打ち始め（`sl` 等）で
     /// 確認なしの Sleep がアプリより先に来て Enter 一発で走らないようにする
