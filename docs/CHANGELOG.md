@@ -44,6 +44,8 @@ mycast の更新履歴。形式は [Keep a Changelog](https://keepachangelog.com
 
 ## [Unreleased]
 
+## [0.1.3] - 2026-09-24
+
 ### 📝 Changed
 - ルート検索の「Check for Updates」を「Update mycast」に改名
 
