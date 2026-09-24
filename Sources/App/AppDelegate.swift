@@ -168,8 +168,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     // MARK: - 検証フック（dev 版のみ）
 
     #if DEBUG
-    /// `--show root|clipboard|emoji` / `--query <文字列>` / `--key down|up|left|right|escape` /
-    /// `--snapshot <png>` / `--hide`。実行（Enter）のフックは作らない（他のアプリに貼り付けてしまうため）。
+    /// `--show root|clipboard|emoji` / `--query <文字列>` / `--key down|up|left|right|escape|enter` /
+    /// `--snapshot <png>` / `--hide`。`enter` はシステム操作だけを受け付け、実行は dry run（ログのみ）にする。
+    /// 貼り付け・アプリ起動の Enter は作らない（他のアプリに作用してしまうため）。
     /// `--show` はフォーカスも入力ソースも奪わない（作業中のユーザーの邪魔をしない）
     private func runHookCommands(_ args: [String]) {
         var queue = args

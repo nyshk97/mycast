@@ -240,7 +240,8 @@ struct RootListView: View {
                         }
                         ForEach(Array(model.rootResults.enumerated()), id: \.element.id) { i, item in
                             let index = i + model.rootOffset
-                            RootRow(item: item, selected: index == model.selection)
+                            RootRow(item: item, selected: index == model.selection,
+                                    armed: isArmed(item))
                                 .id(index)
                                 .contentShape(Rectangle())
                                 .onTapGesture { model.selection = index; onActivate(index) }
@@ -253,6 +254,13 @@ struct RootListView: View {
                 .onChange(of: model.selection) { _, s in proxy.scrollTo(s) }
             }
         }
+    }
+}
+
+extension RootListView {
+    private func isArmed(_ item: RootItem) -> Bool {
+        if case .system(let a) = item.kind { return a == model.armedAction }
+        return false
     }
 }
 
@@ -298,6 +306,8 @@ struct CalcCard: View {
 struct RootRow: View {
     let item: RootItem
     let selected: Bool
+    /// Enter 1 回目で確認待ちになっている（サブタイトルの位置に確認の文言を出す）
+    var armed = false
 
     private var accent: Color {
         if case .command(let mode) = item.kind { return Theme.color(for: mode) }
@@ -308,7 +318,9 @@ struct RootRow: View {
         HStack(spacing: 12) {
             ItemIcon(iconPath: item.iconPath, symbolName: item.symbolName, tint: accent)
             Text(item.title).font(.system(size: 14)).lineLimit(1)
-            if let subtitle = item.subtitle {
+            if armed, case .system(let action) = item.kind {
+                Text(action.confirmPrompt).font(.system(size: 13, weight: .medium)).foregroundStyle(Theme.rose).lineLimit(1)
+            } else if let subtitle = item.subtitle {
                 Text(subtitle).font(.system(size: 13)).opacity(0.5).lineLimit(1)
             }
             if let alias = item.alias {
@@ -379,7 +391,7 @@ struct FooterView: View {
         HStack(spacing: 14) {
             switch model.mode {
             case .root:
-                KeyHint(key: "↵", label: model.calcSelected ? "Copy Answer" : "Open")
+                KeyHint(key: "↵", label: rootActionLabel)
             case .clipboard, .emoji:
                 KeyHint(key: "↵", label: "Paste")
                 KeyHint(key: "⌘↵", label: "Copy")
@@ -392,6 +404,16 @@ struct FooterView: View {
             Text(Env.versionLabel).font(.system(size: 11)).opacity(0.35)
         }
         .padding(.horizontal, 16)
+    }
+}
+
+extension FooterView {
+    private var rootActionLabel: String {
+        if model.calcSelected { return "Copy Answer" }
+        if case .system(let action) = model.selectedRootItem?.kind {
+            return model.armedAction == action ? "Confirm \(action.title)" : action.title
+        }
+        return "Open"
     }
 }
 
