@@ -53,6 +53,8 @@ final class LauncherController {
     private var systemDryRun = false
 
     var isShown: Bool { panel.isVisible }
+    /// Check for Updates の実行先（Sparkle は AppDelegate が持つ）
+    var onCheckForUpdates: (() -> Void)?
 
     init(model: LauncherModel, paster: Paster) {
         self.model = model
@@ -311,6 +313,11 @@ final class LauncherController {
                 } else {
                     SystemActions.perform(action)
                 }
+            case .checkForUpdates:
+                // Sparkle のウインドウが前面に出るので元のアプリへは戻さない
+                close(.launched)
+                onCheckForUpdates?()
+                Log.write("update.check_from_launcher")
             case .command(let mode):
                 openedDirectly = false
                 model.reset(to: mode)

@@ -7,6 +7,7 @@ struct RootItem: Identifiable {
         case settingsPane(String)
         case command(LauncherMode)
         case system(SystemAction)
+        case checkForUpdates
     }
 
     let id: String
@@ -43,6 +44,12 @@ final class AppIndex {
                  kind: .command(.emoji), keys: ["Search Emoji & Symbols", "Emoji", "絵文字", "emoji"],
                  alias: "e", iconPath: nil, symbolName: "face.smiling"),
     ]
+    /// 常用版で Sparkle が動いているときだけ AppDelegate が入れる（dev 版・鍵の無いビルドでは出さない）
+    var updateCommand: RootItem?
+    static let checkForUpdatesItem = RootItem(
+        id: "cmd:check-for-updates", title: "Check for Updates", subtitle: "アップデートを確認", typeLabel: "Command",
+        kind: .checkForUpdates, keys: ["Check for Updates", "Update", "アップデートを確認", "appudeto"],
+        alias: nil, iconPath: nil, symbolName: "arrow.down.circle")
     /// all の末尾に置く。同点のときは並び順で決まるので、打ち始め（`sl` 等）で
     /// 確認なしの Sleep がアプリより先に来て Enter 一発で走らないようにする
     let systemCommands: [RootItem] = SystemAction.allCases.map { a in
@@ -51,7 +58,7 @@ final class AppIndex {
                  alias: nil, iconPath: nil, symbolName: a.symbolName)
     }
 
-    var all: [RootItem] { commands + apps + panes + systemCommands }
+    var all: [RootItem] { commands + (updateCommand.map { [$0] } ?? []) + apps + panes + systemCommands }
 
     init(db: Database) {
         self.db = db

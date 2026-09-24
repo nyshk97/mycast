@@ -54,6 +54,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         #if !DEBUG
         startUpdater()
+        if updaterController != nil {
+            index.updateCommand = AppIndex.checkForUpdatesItem
+            launcher.onCheckForUpdates = { [weak self] in self?.checkForUpdates() }
+        }
         registerLoginItem()
         #endif
 
