@@ -44,6 +44,8 @@ mycast の更新履歴。形式は [Keep a Changelog](https://keepachangelog.com
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-09-24
+
 ### ✨ Added
 - アプリ・システム設定のパネルを検索して開くランチャー（⌃L）
 - クリップボード履歴（`c`）。テキスト・画像・ファイルを 3 か月保存し、Enter で貼り付け・⌘Enter でコピー
