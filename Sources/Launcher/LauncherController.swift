@@ -26,7 +26,7 @@ final class LauncherController {
         case escape
         /// ホットキーの再押下
         case toggle
-        /// ⌘Enter でコピーだけした
+        /// ⌘Enter でコピーだけした・計算の答えをコピーした
         case copied
         /// アプリ・設定パネルを開いた（開いた側が前面になる）
         case launched
@@ -258,8 +258,14 @@ final class LauncherController {
     func execute(copyOnly: Bool) {
         switch model.mode {
         case .root:
-            guard model.rootResults.indices.contains(model.selection) else { return }
-            let item = model.rootResults[model.selection]
+            if model.calcSelected, let calc = model.calc {
+                // Raycast と同じく Enter でも答えをコピーするだけ（貼り付けない）
+                paster.copy(.text(calc.answer))
+                close(.copied)
+                Log.write("calc.copied")
+                return
+            }
+            guard let item = model.selectedRootItem else { return }
             model.usage.record(item.id)
             switch item.kind {
             case .app(let url):

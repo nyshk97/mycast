@@ -21,6 +21,15 @@ enum LauncherMode: String {
     }
 }
 
+/// ルート検索に打った式と答え。候補の先頭（選択位置 0）に出る
+struct CalcResult: Equatable {
+    let expression: String
+    /// コピーする値（桁区切りなし）
+    let answer: String
+    /// 表示用（桁区切りあり）
+    let display: String
+}
+
 /// パネルの表示状態。検索語・モード・候補・選択位置を持つ（実行は LauncherController）
 final class LauncherModel: ObservableObject {
     static let emojiColumns = 10
@@ -30,6 +39,8 @@ final class LauncherModel: ObservableObject {
     @Published private(set) var query = ""
     @Published var selection = 0
     @Published private(set) var rootResults: [RootItem] = []
+    /// 検索語が式のときだけ入る。あれば選択位置 0 が計算カードで、rootResults は 1 つずれる
+    @Published private(set) var calc: CalcResult?
     @Published private(set) var clips: [ClipItem] = []
     @Published private(set) var emojis: [EmojiEntry] = []
     /// スナップショット撮影中だけ背景を不透明にする（ぼかしはプロセス内描画に写らないため）
@@ -59,10 +70,21 @@ final class LauncherModel: ObservableObject {
 
     var itemCount: Int {
         switch mode {
-        case .root: return rootResults.count
+        case .root: return rootOffset + rootResults.count
         case .clipboard: return clips.count
         case .emoji: return emojis.count
         }
+    }
+
+    /// ルートで rootResults[i] の選択位置は i + rootOffset
+    var rootOffset: Int { calc == nil ? 0 : 1 }
+
+    var calcSelected: Bool { mode == .root && calc != nil && selection == 0 }
+
+    /// 選択中のアプリ・設定パネル・コマンド（計算カードを選んでいるときは nil）
+    var selectedRootItem: RootItem? {
+        let i = selection - rootOffset
+        return mode == .root && rootResults.indices.contains(i) ? rootResults[i] : nil
     }
 
     func reset(to mode: LauncherMode) {
@@ -87,6 +109,11 @@ final class LauncherModel: ObservableObject {
         generation += 1
         switch mode {
         case .root:
+            calc = Calculator.evaluate(query).map { v in
+                CalcResult(expression: query.trimmingCharacters(in: .whitespaces),
+                           answer: Calculator.format(v, grouping: false),
+                           display: Calculator.format(v, grouping: true))
+            }
             let items = index.all
             let byID = Dictionary(items.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
             let inputs = items.map { RankInput(id: $0.id, keys: $0.keys, alias: $0.alias, usage: usage.usage($0.id)) }

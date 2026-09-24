@@ -200,7 +200,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 let m = launcher.model
                 let items: [String]
                 switch m.mode {
-                case .root: items = m.rootResults.prefix(10).map { "\($0.title) [\($0.typeLabel)]" }
+                case .root:
+                    items = (m.calc.map { ["= \($0.answer) [Calculator]"] } ?? [])
+                        + m.rootResults.prefix(10).map { "\($0.title) [\($0.typeLabel)]" }
                 case .clipboard: items = m.clips.prefix(10).map { "\($0.kind.rawValue): \($0.title)" }
                 case .emoji: items = m.emojis.prefix(10).map { $0.e }
                 }

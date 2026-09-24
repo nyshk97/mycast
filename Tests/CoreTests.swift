@@ -142,3 +142,54 @@ final class AppPathRulesTests: XCTestCase {
         XCTAssertNil(AppPathRules.romanized("Notes"))
     }
 }
+
+final class CalculatorTests: XCTestCase {
+    func testPrecedenceAndParentheses() {
+        XCTAssertEqual(Calculator.evaluate("3 + (34 *2)"), 71)
+        XCTAssertEqual(Calculator.evaluate("2 + 3 * 4"), 14)
+        XCTAssertEqual(Calculator.evaluate("(2 + 3) * 4"), 20)
+        XCTAssertEqual(Calculator.evaluate("10 - 4 - 3"), 3) // 左結合
+        XCTAssertEqual(Calculator.evaluate("2 ^ 3 ^ 2"), 512) // 右結合
+        XCTAssertEqual(Calculator.evaluate("-2 ^ 2"), -4)
+        XCTAssertEqual(Calculator.evaluate("10 % 3"), 1)
+        XCTAssertEqual(Calculator.evaluate("7 / 2"), 3.5)
+        XCTAssertEqual(Calculator.evaluate("3 * -2"), -6)
+        XCTAssertEqual(Calculator.evaluate("-(2 + 3) * 2"), -10)
+    }
+
+    func testAlternativeSymbolsAndNumbers() {
+        XCTAssertEqual(Calculator.evaluate("6 × 7"), 42)
+        XCTAssertEqual(Calculator.evaluate("9 ÷ 3"), 3)
+        XCTAssertEqual(Calculator.evaluate("1,000 * 3"), 3000)
+        XCTAssertEqual(Calculator.evaluate(".5 + 1."), 1.5)
+    }
+
+    func testAutoClosesTrailingParentheses() {
+        XCTAssertEqual(Calculator.evaluate("3 + (34 * 2"), 71)
+        XCTAssertEqual(Calculator.evaluate("((1 + 2) * 3"), 9)
+    }
+
+    /// 二項演算子の無い入力はアプリ検索に譲る
+    func testNotAnExpression() {
+        for q in ["", "3", "-3", "(3)", "+", "safari", "3 apples", "1.2.3 + 1", "c"] {
+            XCTAssertNil(Calculator.evaluate(q), q)
+        }
+    }
+
+    func testIncompleteOrInvalid() {
+        for q in ["3 +", "3 * ", "(3 + 4))", "3 + 4)", "(3)(4)", "3 4 + 1", "1 / 0", "0 / 0", "5 % 0", "10 ^ 400"] {
+            XCTAssertNil(Calculator.evaluate(q), q)
+        }
+    }
+
+    func testFormat() {
+        XCTAssertEqual(Calculator.format(Calculator.evaluate("0.1 + 0.2")!, grouping: false), "0.3")
+        XCTAssertEqual(Calculator.format(1234567.5, grouping: true), "1,234,567.5")
+        XCTAssertEqual(Calculator.format(1234567.5, grouping: false), "1234567.5")
+        XCTAssertEqual(Calculator.format(71, grouping: true), "71")
+        XCTAssertEqual(Calculator.format(-0.25, grouping: true), "-0.25")
+        XCTAssertEqual(Calculator.format(Calculator.evaluate("0 * -1")!, grouping: false), "0")
+        XCTAssertEqual(Calculator.format(Calculator.evaluate("1 / 3")!, grouping: false), "0.333333333333333")
+        XCTAssertEqual(Calculator.format(Calculator.evaluate("2 ^ 60")!, grouping: false), "1.15292150460685e+18")
+    }
+}

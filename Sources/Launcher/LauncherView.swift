@@ -222,18 +222,28 @@ struct RootListView: View {
     var onActivate: (Int) -> Void
 
     var body: some View {
-        if model.rootResults.isEmpty {
+        if model.rootResults.isEmpty, model.calc == nil {
             EmptyStateView(text: "No results")
         } else {
             ScrollViewReader { proxy in
                 ScrollView {
                     LazyVStack(spacing: 2) {
-                        SectionHeader(text: "Results")
-                        ForEach(Array(model.rootResults.enumerated()), id: \.element.id) { i, item in
-                            RootRow(item: item, selected: i == model.selection)
-                                .id(i)
+                        if let calc = model.calc {
+                            SectionHeader(text: "Calculator")
+                            CalcCard(calc: calc, selected: model.selection == 0)
+                                .id(0)
                                 .contentShape(Rectangle())
-                                .onTapGesture { model.selection = i; onActivate(i) }
+                                .onTapGesture { model.selection = 0; onActivate(0) }
+                        }
+                        if !model.rootResults.isEmpty {
+                            SectionHeader(text: "Results")
+                        }
+                        ForEach(Array(model.rootResults.enumerated()), id: \.element.id) { i, item in
+                            let index = i + model.rootOffset
+                            RootRow(item: item, selected: index == model.selection)
+                                .id(index)
+                                .contentShape(Rectangle())
+                                .onTapGesture { model.selection = index; onActivate(index) }
                         }
                     }
                     .padding(.horizontal, 8).padding(.vertical, 6)
@@ -243,6 +253,45 @@ struct RootListView: View {
                 .onChange(of: model.selection) { _, s in proxy.scrollTo(s) }
             }
         }
+    }
+}
+
+/// 「式 → 答え」のカード（Raycast の Calculator）
+struct CalcCard: View {
+    let calc: CalcResult
+    let selected: Bool
+
+    var body: some View {
+        HStack(spacing: 0) {
+            side(calc.expression, label: "Expression")
+            VStack(spacing: 0) {
+                Rectangle().fill(Theme.line).frame(width: 1)
+                Image(systemName: "arrow.right")
+                    .font(.system(size: 16, weight: .semibold))
+                    .opacity(0.6)
+                    .padding(.vertical, 6)
+                Rectangle().fill(Theme.line).frame(width: 1)
+            }
+            side(calc.display, label: "Answer")
+        }
+        .frame(height: 112)
+        .background(SelectionBackground(selected: selected, accent: Theme.blue))
+    }
+
+    private func side(_ text: String, label: String) -> some View {
+        VStack(spacing: 10) {
+            Text(text)
+                .font(.system(size: 28, weight: .semibold))
+                .lineLimit(1)
+                .minimumScaleFactor(0.4)
+            Text(label)
+                .font(.system(size: 11, weight: .medium))
+                .padding(.horizontal, 8).padding(.vertical, 2)
+                .background(RoundedRectangle(cornerRadius: 5).fill(Theme.keyFill))
+                .opacity(0.7)
+        }
+        .padding(.horizontal, 20)
+        .frame(maxWidth: .infinity)
     }
 }
 
@@ -330,7 +379,7 @@ struct FooterView: View {
         HStack(spacing: 14) {
             switch model.mode {
             case .root:
-                KeyHint(key: "↵", label: "Open")
+                KeyHint(key: "↵", label: model.calcSelected ? "Copy Answer" : "Open")
             case .clipboard, .emoji:
                 KeyHint(key: "↵", label: "Paste")
                 KeyHint(key: "⌘↵", label: "Copy")
