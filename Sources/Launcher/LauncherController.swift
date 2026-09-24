@@ -240,6 +240,12 @@ final class LauncherController {
         case kVK_ANSI_P where flags == .control:
             model.moveVertical(-1)
             return true
+        case kVK_ANSI_B where flags == .control && model.mode == .emoji:
+            model.move(-1)
+            return true
+        case kVK_ANSI_F where flags == .control && model.mode == .emoji:
+            model.move(1)
+            return true
         default:
             return false
         }

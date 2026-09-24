@@ -44,6 +44,9 @@ mycast の更新履歴。形式は [Keep a Changelog](https://keepachangelog.com
 
 ## [Unreleased]
 
+### ✨ Added
+- 絵文字ピッカーで ⌃F / ⌃B による左右移動
+
 ## [0.1.0] - 2026-09-24
 
 ### ✨ Added
