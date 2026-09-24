@@ -30,7 +30,7 @@ struct ClipItem: Identifiable, Equatable {
         case .file:
             let urls = fileURLs
             if urls.count == 1 { return urls[0].lastPathComponent }
-            return "\(urls.first?.lastPathComponent ?? "") ほか \(urls.count - 1) 件"
+            return "\(urls.first?.lastPathComponent ?? "") +\(urls.count - 1) more"
         }
     }
 }

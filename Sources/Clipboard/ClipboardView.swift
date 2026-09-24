@@ -8,7 +8,7 @@ struct ClipboardView: View {
 
     var body: some View {
         if model.clips.isEmpty {
-            EmptyStateView(text: model.query.isEmpty ? "まだ履歴がありません" : "一致する履歴がありません")
+            EmptyStateView(text: model.query.isEmpty ? "No clipboard history yet" : "No results")
         } else {
             HStack(spacing: 0) {
                 ScrollViewReader { proxy in
@@ -23,10 +23,12 @@ struct ClipboardView: View {
                         }
                         .padding(.horizontal, 8).padding(.vertical, 6)
                     }
+                    .scrollIndicators(.never)
+                    .id(model.generation)
                     .onChange(of: model.selection) { _, s in proxy.scrollTo(s) }
                 }
                 .frame(width: 300)
-                Divider().opacity(0.5)
+                Rectangle().fill(Theme.line).frame(width: 1)
                 if model.clips.indices.contains(model.selection) {
                     ClipPreview(item: model.clips[model.selection], store: model.clipStore)
                 } else {
@@ -47,7 +49,7 @@ struct ClipRow: View {
             Group {
                 switch item.kind {
                 case .text:
-                    Image(systemName: "doc.plaintext").foregroundStyle(.secondary)
+                    Image(systemName: "doc.plaintext").opacity(0.55)
                 case .file:
                     if let first = item.fileURLs.first {
                         Image(nsImage: IconCache.shared.icon(path: first.path)).resizable()
@@ -56,7 +58,7 @@ struct ClipRow: View {
                     if let url = store.imageURL(item), let img = ThumbnailCache.shared.image(url) {
                         Image(nsImage: img).resizable().aspectRatio(contentMode: .fit)
                     } else {
-                        Image(systemName: "photo").foregroundStyle(.secondary)
+                        Image(systemName: "photo").opacity(0.55)
                     }
                 }
             }
@@ -65,8 +67,8 @@ struct ClipRow: View {
             Spacer(minLength: 0)
         }
         .padding(.horizontal, 10)
-        .frame(height: 34)
-        .background(RoundedRectangle(cornerRadius: 7).fill(selected ? Color.white.opacity(0.12) : Color.clear))
+        .frame(height: 36)
+        .background(SelectionBackground(selected: selected, cornerRadius: 8))
     }
 }
 
@@ -97,7 +99,7 @@ struct ClipPreview: View {
                         Image(nsImage: img).resizable().aspectRatio(contentMode: .fit).padding(14)
                             .frame(maxWidth: .infinity, maxHeight: .infinity)
                     } else {
-                        EmptyStateView(text: "画像ファイルが見つかりません")
+                        EmptyStateView(text: "Image file not found")
                     }
                 case .file:
                     ScrollView {
@@ -115,11 +117,11 @@ struct ClipPreview: View {
                 }
             }
             .frame(maxHeight: .infinity)
-            Divider().opacity(0.5)
+            Rectangle().fill(Theme.line).frame(height: 1)
             VStack(alignment: .leading, spacing: 3) {
-                meta("種類", item.kind == .text ? "テキスト" : item.kind == .image ? "画像" : "ファイル")
-                if let app = item.sourceApp { meta("コピー元", appName(app)) }
-                meta("コピー日時", Self.dateFormatter.string(from: item.lastCopiedAt))
+                meta("Type", item.kind == .text ? "Text" : item.kind == .image ? "Image" : "File")
+                if let app = item.sourceApp { meta("Source", appName(app)) }
+                meta("Copied", Self.dateFormatter.string(from: item.lastCopiedAt))
             }
             .padding(.horizontal, 14).padding(.vertical, 8)
         }
@@ -127,7 +129,7 @@ struct ClipPreview: View {
 
     private func meta(_ k: String, _ v: String) -> some View {
         HStack {
-            Text(k).foregroundStyle(.secondary)
+            Text(k).opacity(0.5)
             Spacer()
             Text(v).lineLimit(1)
         }

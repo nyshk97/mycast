@@ -40,6 +40,7 @@ final class LauncherController {
     private let paster: Paster
     private let panel: LauncherPanel
     private var hosting: NSHostingView<LauncherView>?
+    private let effect = NSVisualEffectView()
     private var previousApp: NSRunningApplication?
     private var savedInputSource: TISInputSource?
     /// ⌃⌘Space で絵文字を直接開いたとき true（Esc でルートに戻らず閉じる）
@@ -65,15 +66,14 @@ final class LauncherController {
         panel.isReleasedWhenClosed = false
         panel.appearance = NSAppearance(named: .darkAqua)
 
-        let effect = NSVisualEffectView()
+        // 背景のぼかし。黒ガラスの面と縁は SwiftUI 側（LauncherView）で描き、ここは角丸を合わせるだけ
         effect.material = .hudWindow
         effect.blendingMode = .behindWindow
         effect.state = .active
         effect.wantsLayer = true
-        effect.layer?.cornerRadius = 14
+        effect.layer?.cornerRadius = LauncherLayout.collapsedRadius
+        effect.layer?.cornerCurve = .continuous
         effect.layer?.masksToBounds = true
-        effect.layer?.borderWidth = 1
-        effect.layer?.borderColor = NSColor.white.withAlphaComponent(0.12).cgColor
         panel.contentView = effect
 
         let host = NSHostingView(rootView: LauncherView(model: model, onActivate: { [weak self] i in
@@ -192,7 +192,9 @@ final class LauncherController {
         let top = vf.maxY - vf.height * 0.2
         let frame = NSRect(x: (vf.midX - LauncherLayout.width / 2).rounded(), y: (top - height).rounded(),
                            width: LauncherLayout.width, height: height)
+        effect.layer?.cornerRadius = model.expanded ? LauncherLayout.expandedRadius : LauncherLayout.collapsedRadius
         panel.setFrame(frame, display: true)
+        panel.invalidateShadow()
     }
 
     // MARK: - キー操作
