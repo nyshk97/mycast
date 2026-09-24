@@ -4,14 +4,14 @@
 
 ```bash
 mise run build     # Debug（mycast Dev）。署名 xcconfig が無ければ ad-hoc で通る
-mise run test      # Sources/Core の純粋関数（あいまい一致・順位・履歴の判定・絵文字検索）
+mise run test      # Sources/Core の純粋関数（あいまい一致・順位・履歴の判定・絵文字検索・計算）
 mise run run       # /Applications/mycast Dev.app に置いて起動し直す（旧プロセスの終了を待つ）
 ```
 
 ログは `~/Library/Logs/mycast/mycast-dev.log`（常用版は `mycast.log`）。先頭の語がイベント名:
 `launch` / `db.migrated to vN` / `index.apps_updated` / `hotkey.registered` / `hotkey.register_failed` /
 `panel.shown` / `panel.closed reason=…` / `panel.focus_failed` / `clipboard.recorded` / `clipboard.purged` / `paste.posted` /
-`paste.fallback_copy reason=…` / `launch.app` / `launch.pane`。
+`paste.fallback_copy reason=…` / `launch.app` / `launch.pane` / `calc.copied`。
 
 ## 検証フック（dev 版のみ・フォーカスを奪わない）
 
@@ -24,6 +24,7 @@ B="/Applications/mycast Dev.app/Contents/MacOS/mycast Dev"
 "$B" --show root --query term --dump --snapshot /tmp/s.png --hide
 "$B" --show clipboard --key down --snapshot /tmp/c.png --hide
 "$B" --show emoji --query いいね --dump --hide
+"$B" --show root --query "3 + (34 *2)" --dump --snapshot /tmp/calc.png --hide   # items の先頭が "= 71 [Calculator]"
 tail ~/Library/Logs/mycast/mycast-dev.log   # hook.dump に mode / query / selection / count / 先頭 10 件
 ```
 
@@ -60,6 +61,7 @@ fixture に入れて起動し直すと `clipboard.purged rows=1 files=1` にな�
 - 日本語入力中に開いても 1 打目から英字になる。Esc で閉じた後、元のアプリが日本語入力に戻る
 - 他のアプリをクリックして閉じたとき、そのアプリが前面のまま（元のアプリに戻らない）
 - `c` → Enter → 履歴で Enter → 元のアプリに貼り付く。⌘Enter はコピーだけで元のアプリに戻る
+- `3 + (34 *2)` → Enter で `71` がコピーされ、元のアプリに戻る（貼り付けはしない）
 - `e` → Enter、または ⌃⌘Space（dev は ⌃⌥⌘Space）→ 絵文字を Enter で貼り付け
 - アクセシビリティ許可が無いとき・パスワード入力中は、コピーだけになりトーストが出る
 - 常用版: 再ログイン後もログイン項目として常駐し、⌃L が効く
