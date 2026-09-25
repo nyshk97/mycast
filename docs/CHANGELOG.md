@@ -13,6 +13,9 @@ mycast の更新履歴。形式は [Keep a Changelog](https://keepachangelog.com
 ```markdown
 ## [Unreleased]
 
+### 📝 Changed
+- ランチャーを主画面ではなくマウスカーソルのある画面に表示するように変更
+
 ### ✨ Added
 - メニューに「アップデートを確認…」を追加
 
