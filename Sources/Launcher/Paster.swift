@@ -120,7 +120,7 @@ final class Paster {
     }
 }
 
-/// 画面下に数秒だけ出る通知。パネルを閉じた後の「コピーだけになった」を知らせる
+/// カーソルのある画面の下に数秒だけ出る通知。パネルを閉じた後の「コピーだけになった」を知らせる
 enum Toast {
     private static var window: NSPanel?
     private static var hideWork: DispatchWorkItem?
@@ -152,7 +152,7 @@ enum Toast {
         bg.addSubview(label)
         panel.contentView = bg
         panel.appearance = NSAppearance(named: .darkAqua)
-        if let screen = NSScreen.screens.first {
+        if let screen = NSScreen.underMouse {
             let f = screen.visibleFrame
             panel.setFrame(NSRect(x: f.midX - size.width / 2, y: f.minY + 80, width: size.width, height: size.height), display: true)
         }

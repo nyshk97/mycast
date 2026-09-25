@@ -229,3 +229,25 @@ final class SystemCommandTests: XCTestCase {
         XCTAssertEqual(Ranker.rank(query: "shatto", items: items, now: now).first, "shutDown")
     }
 }
+
+final class ScreenPickTests: XCTestCase {
+    // 内蔵（主画面）の右に Studio Display を上揃えで並べた配置
+    let frames = [CGRect(x: 0, y: 0, width: 1728, height: 1117),
+                  CGRect(x: 1728, y: -323, width: 2560, height: 1440)]
+
+    func testPicksScreenUnderPoint() {
+        XCTAssertEqual(ScreenPick.index(containing: CGPoint(x: 500, y: 500), in: frames), 0)
+        XCTAssertEqual(ScreenPick.index(containing: CGPoint(x: 3000, y: 800), in: frames), 1)
+        XCTAssertEqual(ScreenPick.index(containing: CGPoint(x: 3000, y: -300), in: frames), 1)
+    }
+
+    func testTopEdgeCountsAsInside() {
+        XCTAssertEqual(ScreenPick.index(containing: CGPoint(x: 3000, y: 1117), in: frames), 1)
+        XCTAssertEqual(ScreenPick.index(containing: CGPoint(x: 4288, y: 1117), in: frames), 1)
+    }
+
+    func testFallsBackToPrimary() {
+        XCTAssertEqual(ScreenPick.index(containing: CGPoint(x: -100, y: 500), in: frames), 0)
+        XCTAssertEqual(ScreenPick.index(containing: CGPoint(x: 10, y: 10), in: []), 0)
+    }
+}

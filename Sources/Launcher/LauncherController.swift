@@ -15,6 +15,19 @@ final class LauncherPanel: NSPanel {
     }
 }
 
+extension NSScreen {
+    /// カーソルのある画面（どれにも入らなければ主画面）
+    static var underMouse: NSScreen? {
+        let screens = NSScreen.screens
+        guard !screens.isEmpty else { return nil }
+        return screens[ScreenPick.index(containing: NSEvent.mouseLocation, in: screens.map(\.frame))]
+    }
+
+    var displayID: CGDirectDisplayID? {
+        (deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? NSNumber)?.uint32Value
+    }
+}
+
 /// パネルの開閉・キー操作・実行。
 ///
 /// フォーカスは Raycast と同じモデル: ホットキーで前面アプリを記憶 → 自アプリをアクティブ化 → key な NSPanel を表示
@@ -49,6 +62,8 @@ final class LauncherController {
     private var openedDirectly = false
     private var closing = false
     private var keyMonitor: Any?
+    /// 開いたときにカーソルがあった画面。展開等で配置し直しても閉じるまで変えない
+    private var screenID: CGDirectDisplayID?
     /// 検証フックの Enter で本物の再起動等を撃たないためのフラグ（dev のフックだけが立てる）
     private var systemDryRun = false
 
@@ -128,6 +143,7 @@ final class LauncherController {
         }
         openedDirectly = direct
         model.reset(to: mode) // Pop to Root: 開くたびに空・指定のモードから
+        if !panel.isVisible { screenID = NSScreen.underMouse?.displayID }
         layoutPanel()
         hosting?.layoutSubtreeIfNeeded() // 検索欄（NSViewRepresentable）の生成を確定させる
         if activate {
@@ -141,7 +157,7 @@ final class LauncherController {
             // dev の検証フック用: フォーカスも入力ソースも奪わずに表示だけする
             panel.orderFrontRegardless()
         }
-        Log.write("panel.shown mode=\(mode.rawValue) direct=\(direct) activate=\(activate) prev=\(previousApp?.bundleIdentifier ?? "-")")
+        Log.write("panel.shown mode=\(mode.rawValue) direct=\(direct) activate=\(activate) prev=\(previousApp?.bundleIdentifier ?? "-") screen=\(screenID.map(String.init) ?? "-")")
     }
 
     func close(_ reason: CloseReason) {
@@ -188,9 +204,11 @@ final class LauncherController {
         }
     }
 
-    /// 主画面（メニューバーのある画面）の上 1/5 あたりに中央寄せ。高さが変わっても上端を固定する
+    /// 開いたときにカーソルがあった画面の上 1/5 あたりに中央寄せ。高さが変わっても上端を固定する
     private func layoutPanel() {
-        guard let screen = NSScreen.screens.first else { return }
+        // 開いている間に画面が外されたらカーソルのある画面へ
+        guard let screen = NSScreen.screens.first(where: { $0.displayID == screenID }) ?? NSScreen.underMouse else { return }
+        screenID = screen.displayID
         let vf = screen.visibleFrame
         let height = model.expanded ? LauncherLayout.expandedHeight : LauncherLayout.barHeight
         let top = vf.maxY - vf.height * 0.2

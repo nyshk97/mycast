@@ -9,7 +9,7 @@ Swift + AppKit（パネルの中身は SwiftUI）+ XcodeGen。`project.yml` が�
 Raycast で使っていた設定をそのまま既定値として焼き込んでいる。オプションで変えられるようにしない。
 
 - ホットキー: ランチャー ⌃L / 絵文字 ⌃⌘Space（dev は ⌃⌥L / ⌃⌥⌘Space）→ `Sources/App/HotKeys.swift`
-- Compact（空のルートは検索欄だけ）・開くたびに空のルートへ（Pop to Root）・主画面に表示・入力ソースを ABC に切り替えて閉じたら戻す
+- Compact（空のルートは検索欄だけ）・開くたびに空のルートへ（Pop to Root）・カーソルのある画面に表示（開いた時点で決め、閉じるまで動かさない）・入力ソースを ABC に切り替えて閉じたら戻す
 - エイリアスは組み込みコマンドの `c`（Clipboard History）と `e`（Emoji）だけ。アプリには付けない
 - 計算はルート検索に打った式を先頭のカードに出し、Enter（⌘Enter も）で答えをコピーする。四則演算・括弧・`^`・`%`（剰余）だけ → `Sources/Core/Calculator.swift`
 - システム操作は Sleep / Lock Screen / Restart / Shut Down / Close All Apps（→ `Sources/Core/SystemCommand.swift`）。Restart・Shut Down・Close All Apps は Enter 2 回で実行（1 回目は行が確認表示に変わるだけ。選択か検索語が変わると解除）。Close All Apps は Finder と mycast 以外の Dock に出るアプリを `terminate()`（未保存の書類は各アプリが止める）
