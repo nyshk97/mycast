@@ -44,6 +44,8 @@ mycast の更新履歴。形式は [Keep a Changelog](https://keepachangelog.com
 
 ## [Unreleased]
 
+## [0.1.5] - 2026-09-25
+
 ### 📝 Changed
 - ランチャーを主画面ではなくマウスカーソルのある画面に表示するように変更
 
