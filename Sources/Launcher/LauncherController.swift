@@ -77,9 +77,7 @@ final class LauncherController {
         effect.blendingMode = .behindWindow
         effect.state = .active
         effect.wantsLayer = true
-        effect.layer?.cornerRadius = LauncherLayout.collapsedRadius
-        effect.layer?.cornerCurve = .continuous
-        effect.layer?.masksToBounds = true
+        effect.maskImage = Self.roundedMask(radius: LauncherLayout.collapsedRadius)
         panel.contentView = effect
 
         let host = NSHostingView(rootView: LauncherView(model: model, onActivate: { [weak self] i in
@@ -198,9 +196,22 @@ final class LauncherController {
         let top = vf.maxY - vf.height * 0.2
         let frame = NSRect(x: (vf.midX - LauncherLayout.width / 2).rounded(), y: (top - height).rounded(),
                            width: LauncherLayout.width, height: height)
-        effect.layer?.cornerRadius = model.expanded ? LauncherLayout.expandedRadius : LauncherLayout.collapsedRadius
+        effect.maskImage = Self.roundedMask(radius: model.expanded ? LauncherLayout.expandedRadius : LauncherLayout.collapsedRadius)
         panel.setFrame(frame, display: true)
         panel.invalidateShadow()
+    }
+
+    /// behindWindow のぼかしは layer の角丸では切れず、角に四角いぼかしが残る。maskImage で切る
+    private static func roundedMask(radius: CGFloat) -> NSImage {
+        let side = radius * 2 + 1
+        let image = NSImage(size: NSSize(width: side, height: side), flipped: false) { rect in
+            NSColor.black.setFill()
+            NSBezierPath(roundedRect: rect, xRadius: radius, yRadius: radius).fill()
+            return true
+        }
+        image.capInsets = NSEdgeInsets(top: radius, left: radius, bottom: radius, right: radius)
+        image.resizingMode = .stretch
+        return image
     }
 
     // MARK: - キー操作

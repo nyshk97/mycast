@@ -44,6 +44,9 @@ mycast の更新履歴。形式は [Keep a Changelog](https://keepachangelog.com
 
 ## [Unreleased]
 
+### 🐛 Fixed
+- ランチャーの角に四角いぼかしが透けて見えるのを修正
+
 ## [0.1.3] - 2026-09-24
 
 ### 📝 Changed
