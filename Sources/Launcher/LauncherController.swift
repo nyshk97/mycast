@@ -76,7 +76,10 @@ final class LauncherController {
         self.paster = paster
         panel = LauncherPanel(
             contentRect: NSRect(x: 0, y: 0, width: LauncherLayout.width, height: LauncherLayout.barHeight),
-            styleMask: [.borderless, .fullSizeContentView], backing: .buffered, defer: false)
+            // nonactivatingPanel: Secure Input 中（パスワード欄にフォーカスがある等）は macOS が NSApp.activate を断るので、
+            // アプリが前面になれなくてもパネル単独で key になって打鍵を受けられるようにする。
+            // styleMask の後付けでは効かないことがあるので生成時に指定する
+            styleMask: [.borderless, .fullSizeContentView, .nonactivatingPanel], backing: .buffered, defer: false)
         panel.level = .floating
         panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
         panel.isOpaque = false
@@ -138,6 +141,7 @@ final class LauncherController {
 
     func show(_ mode: LauncherMode, direct: Bool, activate: Bool = true) {
         let front = NSWorkspace.shared.frontmostApplication
+        let secureBefore = IsSecureEventInputEnabled()
         if front?.processIdentifier != ProcessInfo.processInfo.processIdentifier {
             previousApp = front
         }
@@ -157,7 +161,18 @@ final class LauncherController {
             // dev の検証フック用: フォーカスも入力ソースも奪わずに表示だけする
             panel.orderFrontRegardless()
         }
-        Log.write("panel.shown mode=\(mode.rawValue) direct=\(direct) activate=\(activate) prev=\(previousApp?.bundleIdentifier ?? "-") screen=\(screenID.map(String.init) ?? "-")")
+        Log.write("panel.shown mode=\(mode.rawValue) direct=\(direct) activate=\(activate) prev=\(previousApp?.bundleIdentifier ?? "-") screen=\(screenID.map(String.init) ?? "-") secure_input=\(secureBefore ? 1 : 0)")
+        if activate {
+            for delay in [0.0, 0.3] {
+                DispatchQueue.main.asyncAfter(deadline: .now() + delay) { [weak self] in self?.logFocusState(delay) }
+            }
+        }
+    }
+
+    private func logFocusState(_ delay: Double) {
+        guard panel.isVisible else { return }
+        let front = NSWorkspace.shared.frontmostApplication?.bundleIdentifier ?? "-"
+        Log.write("panel.focus_state t=\(delay) active=\(NSApp.isActive ? 1 : 0) key=\(panel.isKeyWindow ? 1 : 0) front=\(front) secure_input=\(IsSecureEventInputEnabled() ? 1 : 0)")
     }
 
     func close(_ reason: CloseReason) {

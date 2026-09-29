@@ -6,7 +6,8 @@ import Carbon
 ///
 /// 順序は固定（取りこぼし防止）: パネルを閉じる（呼び出し側。元アプリへの復帰は含めない）→ 入力ソースを復元（同）
 /// → 元アプリを 1 回だけ前面化して完了を待つ → ペーストボードに書く → ⌘V を合成。
-/// アクセシビリティ未許可・Secure Event Input 有効のときは「コピーだけ」に落として知らせる。
+/// アクセシビリティ未許可のときは「コピーだけ」に落として知らせる。
+/// Secure Event Input（パスワード入力欄等）は他プロセスによる打鍵の読み取りを止めるだけで、合成した ⌘V は届くので縮退しない。
 final class Paster {
     enum Content {
         case text(String)
@@ -72,13 +73,8 @@ final class Paster {
             Toast.show("コピーしました（アクセシビリティの許可が無いため貼り付けできません）")
             return
         }
-        if IsSecureEventInputEnabled() {
-            Log.write("paste.fallback_copy reason=secure_input")
-            Toast.show("コピーしました（パスワード入力中のため貼り付けできません）")
-            return
-        }
         Self.postCommandV()
-        Log.write("paste.posted app=\(appName ?? "-")")
+        Log.write("paste.posted app=\(appName ?? "-") secure_input=\(IsSecureEventInputEnabled() ? 1 : 0)")
     }
 
     private func write(_ content: Content) {

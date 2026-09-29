@@ -41,3 +41,4 @@ Raycast で使っていた設定をそのまま既定値として焼き込んで
 - 検証で `NSPasteboard` に書かない（ユーザーのクリップボードを上書きする）
 - 再起動等は loginwindow への Apple Event。Release は Hardened Runtime なので `mycast.entitlements` の `automation.apple-events` が要る。`scripts/make-release-zip.sh` はアプリを署名し直すので、そこでも `--entitlements` を渡している（外すと配布物だけ送れなくなる）
 - システム操作の漢字名は `AppPathRules.romanized` に通さない（ピンインになる。`再起動` → `zai qi dong`）。ローマ字は `SystemAction.keys` に直接書く
+- パネルは `.nonactivatingPanel`（生成時に指定）。Secure Event Input 中（パスワード欄にフォーカス等）は `NSApp.activate` が断られるので、アプリが前面になれなくても key になれるようにしている。外すとパスワード欄から開いたときに打鍵が元アプリに入る。同じ理由で貼り付けも Secure Input では縮退しない（合成した ⌘V は届く）
