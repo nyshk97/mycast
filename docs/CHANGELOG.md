@@ -13,6 +13,10 @@ mycast の更新履歴。形式は [Keep a Changelog](https://keepachangelog.com
 ```markdown
 ## [Unreleased]
 
+### 🐛 Fixed
+- パスワード入力欄にフォーカスがあるとき、ランチャーに打った文字が入力欄に入ってしまうのを修正
+- パスワード入力欄にクリップボード履歴・絵文字を貼り付けられず、コピーだけになるのを修正
+
 ### ✨ Added
 - メニューに「アップデートを確認…」を追加
 
