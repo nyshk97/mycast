@@ -44,6 +44,8 @@ mycast の更新履歴。形式は [Keep a Changelog](https://keepachangelog.com
 
 ## [Unreleased]
 
+## [0.1.7] - 2026-10-01
+
 ### 🐛 Fixed
 - memode から開いたとき、クリップボード履歴・絵文字の貼り付けが memode でなく後ろのアプリに入るのを修正
 - memode から開いて Esc・⌘Enter で閉じたとき、キー入力が memode に戻らないのを修正
