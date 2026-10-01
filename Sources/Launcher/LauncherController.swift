@@ -57,6 +57,8 @@ final class LauncherController {
     private var hosting: NSHostingView<LauncherView>?
     private let effect = NSVisualEffectView()
     private var previousApp: NSRunningApplication?
+    /// 開いたときに memode（ポップアップのエディタ）が出ていたら、その URL スキーム。閉じたあとキー入力を memode に返す
+    private var memodeScheme: String?
     private var savedInputSource: TISInputSource?
     /// ⌃⌘Space で絵文字を直接開いたとき true（Esc でルートに戻らず閉じる）
     private var openedDirectly = false
@@ -145,6 +147,8 @@ final class LauncherController {
         if front?.processIdentifier != ProcessInfo.processInfo.processIdentifier {
             previousApp = front
         }
+        // mycast が前に出る前に見る（出たあとは memode が key を失っている）。表示中に呼ばれたときは上書きしない
+        if !panel.isVisible { memodeScheme = Handoff.memodeScheme() }
         openedDirectly = direct
         model.reset(to: mode) // Pop to Root: 開くたびに空・指定のモードから
         if !panel.isVisible { screenID = NSScreen.underMouse?.displayID }
@@ -161,7 +165,7 @@ final class LauncherController {
             // dev の検証フック用: フォーカスも入力ソースも奪わずに表示だけする
             panel.orderFrontRegardless()
         }
-        Log.write("panel.shown mode=\(mode.rawValue) direct=\(direct) activate=\(activate) prev=\(previousApp?.bundleIdentifier ?? "-") screen=\(screenID.map(String.init) ?? "-") secure_input=\(secureBefore ? 1 : 0)")
+        Log.write("panel.shown mode=\(mode.rawValue) direct=\(direct) activate=\(activate) prev=\(previousApp?.bundleIdentifier ?? "-") return_to=\(memodeScheme ?? "-") screen=\(screenID.map(String.init) ?? "-") secure_input=\(secureBefore ? 1 : 0)")
         if activate {
             for delay in [0.0, 0.3] {
                 DispatchQueue.main.asyncAfter(deadline: .now() + delay) { [weak self] in self?.logFocusState(delay) }
@@ -184,8 +188,24 @@ final class LauncherController {
             InputSource.select(s)
             savedInputSource = nil
         }
+        let memode = memodeScheme
+        memodeScheme = nil
         switch reason {
-        case .escape, .toggle, .copied, .suspended:
+        case .escape, .toggle, .copied:
+            // memode から開いていたら、元のアプリが前面に戻ってからキー入力を memode に返す
+            // （先に返すと、あとから前面になった元のアプリに key を取られる）
+            if let memode {
+                if let app = previousApp, !app.isTerminated {
+                    app.activate()
+                    paster.whenActive(app) { _ in Handoff.send(memode, "focus") }
+                } else {
+                    // 元のアプリが無ければ hide しない（hide で別のアプリが前面になると、memode はそれを「他のアプリ」とみなして隠れる）
+                    Handoff.send(memode, "focus")
+                }
+            } else {
+                restorePreviousApp()
+            }
+        case .suspended:
             restorePreviousApp()
         case .launched, .paste, .lostFocus:
             break
@@ -395,8 +415,9 @@ final class LauncherController {
             Log.write("deliver.copied mode=\(model.mode.rawValue)")
         } else {
             let target = previousApp
+            let memode = memodeScheme
             close(.paste)
-            paster.paste(content, into: target)
+            paster.paste(content, into: target, memode: memode)
         }
     }
 

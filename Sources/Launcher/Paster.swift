@@ -7,6 +7,7 @@ import Carbon
 /// 順序は固定（取りこぼし防止）: パネルを閉じる（呼び出し側。元アプリへの復帰は含めない）→ 入力ソースを復元（同）
 /// → 元アプリを 1 回だけ前面化して完了を待つ → ペーストボードに書く → ⌘V を合成。
 /// アクセシビリティ未許可のときは「コピーだけ」に落として知らせる。
+/// memode から開いたときは ⌘V の代わりに `memode://paste` を送る（memode が自分で貼る。前面化が上限を過ぎても送る）。
 /// Secure Event Input（パスワード入力欄等）は他プロセスによる打鍵の読み取りを止めるだけで、合成した ⌘V は届くので縮退しない。
 final class Paster {
     enum Content {
@@ -27,15 +28,22 @@ final class Paster {
         write(content)
     }
 
-    func paste(_ content: Content, into app: NSRunningApplication?) {
+    /// `memode` があれば（memode から開いていた）、⌘V を合成せず memode に `memode://paste` を送って貼らせる。
+    /// 元のアプリが前面になるのを待つのは同じ（memode は元のアプリが前面に戻ってから key を取り直す）
+    func paste(_ content: Content, into app: NSRunningApplication?, memode: String? = nil) {
         if let app, !app.isTerminated {
             app.activate()
-            waitUntilActive(app, deadline: Date().addingTimeInterval(1.0)) { [weak self] active in
-                self?.finishPaste(content, appActive: active, appName: app.localizedName)
+            whenActive(app) { [weak self] active in
+                self?.finishPaste(content, appActive: active, appName: app.localizedName, memode: memode)
             }
         } else {
-            finishPaste(content, appActive: false, appName: nil)
+            finishPaste(content, appActive: false, appName: nil, memode: memode)
         }
+    }
+
+    /// `app` が前面になったら（最大 1 秒待って）呼ぶ。前面化は呼び出し側で済ませておく
+    func whenActive(_ app: NSRunningApplication, done: @escaping (Bool) -> Void) {
+        waitUntilActive(app, deadline: Date().addingTimeInterval(1.0), done: done)
     }
 
     private func waitUntilActive(_ app: NSRunningApplication, deadline: Date, done: @escaping (Bool) -> Void) {
@@ -53,8 +61,14 @@ final class Paster {
         }
     }
 
-    private func finishPaste(_ content: Content, appActive: Bool, appName: String?) {
+    private func finishPaste(_ content: Content, appActive: Bool, appName: String?, memode: String?) {
         write(content)
+        if let memode {
+            // memode には元のアプリが前面になれなくても届く（貼るのは memode 自身。アクセシビリティの許可も要らない）
+            Handoff.send(memode, "paste")
+            Log.write("paste.handoff app_active=\(appActive ? 1 : 0) app=\(appName ?? "-")")
+            return
+        }
         guard appActive else {
             Log.write("paste.fallback_copy reason=app_not_active app=\(appName ?? "-")")
             // ウィンドウの無いまま mycast がアクティブに残ると次の打鍵が捨てられるので手放す

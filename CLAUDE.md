@@ -37,6 +37,11 @@ Raycast で使っていた設定をそのまま既定値として焼き込んで
 
 - DB のスキーマを変えるときは `Database.migrations` の**末尾に足すだけ**。既存要素は書き換えない。移行は VERIFY.md の fixture 手順で確かめる
 - 貼り付けの順序（閉じる → 入力ソース復元 → 元アプリを 1 回だけ前面化して待つ → 書く → ⌘V）を崩さない。閉じる処理に復帰を混ぜると前面化が 2 回走って取りこぼす
+- memode（`~/memode`。左 Shift のダブルタップで出すポップアップのエディタ）から開いたときは、閉じたあとキー入力を memode に返す（`Handoff`・`MemodeHandoff`）。
+  memode のパネルは nonactivating なので前面のアプリは後ろのアプリのまま。開く**前**（`NSApp.activate` より前）にウィンドウ一覧で memode のパネルが出ているかを見て覚える。
+  貼り付けは ⌘V を合成せず、元のアプリを前面に戻してから `memode://paste`（dev は `memode-dev://`）を前面にしない開き方で送る（memode が自分で貼る。前面化が上限を過ぎても送る）。
+  Esc / ホットキー再押下 / ⌘Enter は、元のアプリが前面になってから `memode://focus`（先に送ると、あとから前面になった元のアプリに key を取られる）。
+  memode 側の待ち方は memode の CLAUDE.md。リリースは memode を先に出す
 - 元のアプリへ戻すのは Esc / ホットキー再押下 / ⌘Enter / Sleep・Lock Screen のときだけ。他アプリのクリックで閉じたときに戻すと、クリックしたアプリが裏に回る
 - 検証で `NSPasteboard` に書かない（ユーザーのクリップボードを上書きする）
 - 再起動等は loginwindow への Apple Event。Release は Hardened Runtime なので `mycast.entitlements` の `automation.apple-events` が要る。`scripts/make-release-zip.sh` はアプリを署名し直すので、そこでも `--entitlements` を渡している（外すと配布物だけ送れなくなる）

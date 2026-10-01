@@ -251,3 +251,29 @@ final class ScreenPickTests: XCTestCase {
         XCTAssertEqual(ScreenPick.index(containing: CGPoint(x: 10, y: 10), in: []), 0)
     }
 }
+
+final class MemodeHandoffTests: XCTestCase {
+    let panel = CGSize(width: 1382, height: 893)
+
+    func testReturnsSchemeWhenPanelIsShown() {
+        XCTAssertEqual(MemodeHandoff.scheme(windows: [ScreenWindow(bundleID: "local.nyshk97.memode", layer: 3, size: panel)]), "memode")
+        XCTAssertEqual(MemodeHandoff.scheme(windows: [ScreenWindow(bundleID: "local.nyshk97.memode.dev", layer: 3, size: panel)]), "memode-dev")
+    }
+
+    func testIgnoresMenuBarItemAndOtherApps() {
+        // memode のメニューバーのアイテムは隠れていても出ている（レイヤー 25）
+        XCTAssertNil(MemodeHandoff.scheme(windows: [ScreenWindow(bundleID: "local.nyshk97.memode", layer: 25, size: CGSize(width: 30, height: 24))]))
+        XCTAssertNil(MemodeHandoff.scheme(windows: [ScreenWindow(bundleID: "local.nyshk97.memode", layer: 3, size: CGSize(width: 20, height: 20))]))
+        XCTAssertNil(MemodeHandoff.scheme(windows: [ScreenWindow(bundleID: "com.example.editor", layer: 3, size: panel)]))
+        XCTAssertNil(MemodeHandoff.scheme(windows: [ScreenWindow(bundleID: nil, layer: 3, size: panel)]))
+        XCTAssertNil(MemodeHandoff.scheme(windows: []))
+    }
+
+    func testFrontmostWinsWhenBothAreShown() {
+        let dev = ScreenWindow(bundleID: "local.nyshk97.memode.dev", layer: 3, size: panel)
+        let release = ScreenWindow(bundleID: "local.nyshk97.memode", layer: 3, size: panel)
+        let menuItem = ScreenWindow(bundleID: "local.nyshk97.memode", layer: 25, size: CGSize(width: 30, height: 24))
+        XCTAssertEqual(MemodeHandoff.scheme(windows: [menuItem, dev, release]), "memode-dev")
+        XCTAssertEqual(MemodeHandoff.scheme(windows: [release, dev]), "memode")
+    }
+}

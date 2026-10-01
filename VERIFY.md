@@ -69,6 +69,8 @@ fixture に入れて起動し直すと `clipboard.purged rows=1 files=1` にな�
 - `c` → Enter → 履歴で Enter → 元のアプリに貼り付く。⌘Enter はコピーだけで元のアプリに戻る
 - `3 + (34 *2)` → Enter で `71` がコピーされ、元のアプリに戻る（貼り付けはしない）
 - `e` → Enter、または ⌃⌘Space（dev は ⌃⌥⌘Space）→ 絵文字を Enter で貼り付け
+- memode で入力中に ⌃L → 履歴で Enter → memode に貼り付き、memode は隠れない（`paste.handoff` → memode 側 `panel.paste`）。Esc・⌘Enter では memode にそのまま打てる（`handoff.sent url=memode://focus`）。
+  memode を出していないときは `panel.shown … return_to=-` で今まで通り。フックで確かめられる範囲（判定と Esc の `focus`）は memode の VERIFY.md「mycast との受け渡し」
 - アクセシビリティ許可が無いときは、コピーだけになりトーストが出る
 - パスワード入力欄（ブラウザのログインフォーム・`sudo` 中のターミナル等）でも履歴の Enter で貼り付く。ログは `paste.posted … secure_input=1`
 - システム操作の本物の実行（dry run では撃たない）: Lock Screen・Sleep はそのまま、Restart・Shut Down は作業を保存してから。
