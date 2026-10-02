@@ -44,6 +44,9 @@ mycast の更新履歴。形式は [Keep a Changelog](https://keepachangelog.com
 
 ## [Unreleased]
 
+### 📝 Changed
+- ルート検索でも、開いた後にかなキー等で日本語入力へ切り替えられるように変更
+
 ## [0.1.7] - 2026-10-01
 
 ### 🐛 Fixed
