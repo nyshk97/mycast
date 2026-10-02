@@ -115,10 +115,7 @@ final class LauncherController {
             self.close(.lostFocus)
         }
         model.onExpandedChange = { [weak self] _ in self?.layoutPanel() }
-        model.onModeChange = { [weak self] mode in
-            LauncherTextField.current?.romanOnly = (mode == .root)
-            self?.layoutPanel()
-        }
+        model.onModeChange = { [weak self] _ in self?.layoutPanel() }
         installKeyMonitor()
     }
 
@@ -223,7 +220,6 @@ final class LauncherController {
 
     private func focusField() {
         if let field = LauncherTextField.current {
-            field.romanOnly = (model.mode == .root)
             panel.makeFirstResponder(field)
         }
         // 開いた直後に key になりきらず入力を取りこぼすことがあるので、次のループでもう一度（検索欄も取り直す）
@@ -234,7 +230,6 @@ final class LauncherController {
                 Log.write("panel.focus_failed no_field")
                 return
             }
-            field.romanOnly = (self.model.mode == .root)
             if field.currentEditor() == nil { self.panel.makeFirstResponder(field) }
         }
     }

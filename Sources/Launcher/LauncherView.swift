@@ -162,10 +162,6 @@ struct SearchField: NSViewRepresentable {
 
 final class LauncherTextField: NSTextField {
     static weak var current: LauncherTextField?
-    /// ルート検索ではローマ字入力だけを許す（ABC への切り替えが遅れても 1 打目から英字になる）
-    var romanOnly = true {
-        didSet { applyInputPolicy() }
-    }
 
     func setPlaceholder(_ text: String) {
         guard placeholderAttributedString?.string != text else { return }
@@ -177,14 +173,8 @@ final class LauncherTextField: NSTextField {
 
     override func becomeFirstResponder() -> Bool {
         let ok = super.becomeFirstResponder()
-        applyInputPolicy()
         (currentEditor() as? NSTextView)?.insertionPointColor = Theme.creamNS
         return ok
-    }
-
-    func applyInputPolicy() {
-        guard let editor = currentEditor() as? NSTextView, let ctx = editor.inputContext else { return }
-        ctx.allowedInputSourceLocales = romanOnly ? [NSAllRomanInputSourcesLocaleIdentifier] : nil
     }
 }
 
